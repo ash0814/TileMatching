@@ -38,4 +38,16 @@ public:
 
 	UFUNCTION(BlueprintCallable, Category = "Tile Grid")
 	void GenerateGrid();
+
+	UFUNCTION(BlueprintCallable, Category = "Tile Grid")
+	void CheckSelection();
+
+	UFUNCTION(BlueprintCallable, Category = "Tile Grid")
+	bool CheckAndDeleteTiles();
+
+	UFUNCTION(BlueprintCallable, Category = "Tile Grid")
+	void MoveTileDown();
+
+	UFUNCTION(BlueprintCallable, Category = "Tile Grid")
+	void FillEmptyTiles();
 };

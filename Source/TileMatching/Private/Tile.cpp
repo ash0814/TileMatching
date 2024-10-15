@@ -18,11 +18,18 @@ ATile::ATile()
 
 	TileMesh = CreateDefaultSubobject<UStaticMeshComponent>(TEXT("TileMesh"));
 	TileMesh->SetStaticMesh(ConstructorHelpers::FObjectFinder<UStaticMesh>(TEXT("/Script/Engine.StaticMesh'/Game/Meshes/Cube.Cube'")).Object);
-	//TileType = static_cast<ETileType>(FMath::RandRange(0, 3));
 	TileMesh->SetWorldScale3D(FVector(1.0f, 1.0f, 0.2f));
 	TileMesh->SetRelativeLocation(FVector(0.0f, 0.0f, -10.0f));
 	TileMesh->SetupAttachment(TileBoxComp);
 
+	SelectionBoxComp = CreateDefaultSubobject<UBoxComponent>(TEXT("SelectionBoxComp"));
+	SelectionBoxComp->SetBoxExtent(FVector(50.0f, 50.0f, 10.0f));
+	SelectionBoxComp->SetCollisionEnabled(ECollisionEnabled::NoCollision);
+	SelectionBoxComp->SetHiddenInGame(false);
+	SelectionBoxComp->SetupAttachment(TileBoxComp);
+	SelectionBoxComp->SetLineThickness(8.0f);
+	SelectionBoxComp->ShapeColor = FColor::White;
+	SelectionBoxComp->SetVisibility(false);
 }
 
 // Called when the game starts or when spawned
@@ -56,6 +63,21 @@ void ATile::SetTileType(ETileType NewType)
 	case ETileType::TT_Yellow:
 		SetTileColor(FLinearColor::Yellow);
 		break;
+	case ETileType::TT_Purple:
+		SetTileColor(FColor::Purple.ReinterpretAsLinear());
+		break;
+	case ETileType::TT_Magenta:
+		SetTileColor(FColor::Magenta.ReinterpretAsLinear());
+		break;
+	case ETileType::TT_Orange:
+		SetTileColor(FColor::Orange.ReinterpretAsLinear());
+		break;
+	case ETileType::TT_Cyan:
+		SetTileColor(FColor::Cyan.ReinterpretAsLinear());
+		break;
+	case ETileType::TT_None:
+		SetTileColor(FLinearColor::Black);
+		break;
 	default:
 		break;
 	}
@@ -72,12 +94,25 @@ void ATile::SetSelected(bool bSelected)
 {
 	bIsSelected = bSelected;
 	if (bIsSelected)
-	{
-		SetTileColor(FLinearColor::White);
-	}
+		SelectionBoxComp->SetVisibility(true);
 	else
-	{
-		SetTileType(TileType);
-	}
+		SelectionBoxComp->SetVisibility(false);
+}
+
+void ATile::SetTileIndex(int32 NewX, int32 NewY)
+{
+	TileIndexX = NewX;
+	TileIndexY = NewY;
+}
+
+void ATile::GetTileIndex(int32& OutX, int32& OutY) const
+{
+	OutX = TileIndexX;
+	OutY = TileIndexY;
+}
+
+void ATile::SetOutlineColor(FLinearColor NewColor)
+{
+	SelectionBoxComp->ShapeColor = NewColor.ToFColor(true);
 }
 

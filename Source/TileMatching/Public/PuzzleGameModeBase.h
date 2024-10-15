@@ -6,6 +6,8 @@
 #include "GameFramework/GameModeBase.h"
 #include "PuzzleGameModeBase.generated.h"
 
+class ATile;
+
 /**
  * 
  */
@@ -14,6 +16,19 @@ class TILEMATCHING_API APuzzleGameModeBase : public AGameModeBase
 {
 	GENERATED_BODY()
 	
-public:
+private:
 	APuzzleGameModeBase();
+
+protected:
+	virtual void BeginPlay() override;
+
+private:
+	class ATileGrid* CurrentTileGrid;
+
+public:
+	UFUNCTION(BlueprintCallable, Category = "Game Function")
+	void SetCurrentTileGrid(ATileGrid* TileGrid);
+	UFUNCTION(BlueprintCallable, Category = "Game Function")
+	ATileGrid* GetCurrentTileGrid();
+	void OnClickTile(ATile* Tile);
 };

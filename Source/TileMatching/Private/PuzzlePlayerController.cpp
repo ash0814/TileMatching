@@ -6,8 +6,8 @@
 #include "EnhancedInputSubsystems.h"
 #include "EnhancedInputComponent.h"
 #include "DrawDebugHelpers.h"
-#include "TileGrid.h"
 #include "Tile.h"
+#include "PuzzleGameModeBase.h"
 
 
 APuzzlePlayerController::APuzzlePlayerController()
@@ -64,12 +64,24 @@ void APuzzlePlayerController::OnLeftClick(const FInputActionValue& Value)
     bool bHit = GetWorld()->LineTraceSingleByChannel(HitResult, Start, End, ECC_Visibility, Params);
     if (bHit && HitResult.GetActor())
     {
-        AActor* HitActor = HitResult.GetActor();
-        GEngine->AddOnScreenDebugMessage(-1, 5.0f, FColor::White, FString::Printf(TEXT("Hit Actor: %s"), *HitActor->GetName()));
-        
+        AActor* HitActor = HitResult.GetActor(); 
         if (ATile* HitTile = Cast<ATile>(HitActor))
 		{
-            HitTile->SetSelected(true);
+            /*
+            int32 X, Y;
+            HitTile->GetTileIndex(X, Y);
+            GEngine->AddOnScreenDebugMessage(-1, 5.0f, FColor::Yellow, FString::Printf(TEXT("Tile Index: (%d, %d)"), X, Y));
+            if (HitTile->GetIsSelected()) {
+                HitTile->SetSelected(false);
+            }
+            else {
+                HitTile->SetSelected(true);
+            }
+            */
+            auto _GameMode = Cast<APuzzleGameModeBase>(GetWorld()->GetAuthGameMode());
+            if (_GameMode) {
+				_GameMode->OnClickTile(HitTile);
+			}
 		}
     }
 }
