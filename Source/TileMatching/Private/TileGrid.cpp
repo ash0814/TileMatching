@@ -4,6 +4,7 @@
 #include "TileGrid.h"
 #include "Tile.h"
 #include "PuzzleGameModeBase.h"
+#include "PuzzleGameInstance.h"
 #include <queue>
 #include <vector>
 #include <algorithm>
@@ -58,14 +59,14 @@ void ATileGrid::GenerateGrid()
 
 			if (TileClass) {
 				ATile* NewTile = GetWorld()->SpawnActor<ATile>(TileClass, TileLocation, FRotator::ZeroRotator);
-				NewTile->SetTileType(static_cast<ETileType>(FMath::RandRange(0, 3)));
+				NewTile->SetTileType(static_cast<ETileType>(FMath::RandRange(0, 5)));
 				NewTile->SetTileIndex(i, j);
 				NewTile->SetTileGrid(this);
 				TileGrid.Add(NewTile);
 			}
 		}
 	}
-	while (CheckAndDeleteTiles())
+	while (IsTileMatcing())
 	{
 		MoveTileDown();
 	}
@@ -73,56 +74,36 @@ void ATileGrid::GenerateGrid()
 
 void ATileGrid::CheckSelection()
 {
-	int32 SelectedCount = 0;
-	TArray<ATile*> SelectedTiles;
-	for (ATile* Tile : TileGrid)
-	{
-		if (Tile->GetIsSelected())
+	if (SelectedTiles.Num() >= 2) {
+		int32 X1, Y1, X2, Y2;
+		SelectedTiles[0]->GetTileIndex(X1, Y1);
+		SelectedTiles[1]->GetTileIndex(X2, Y2);
+		if (FMath::Abs(X1 - X2) + FMath::Abs(Y1 - Y2) == 1)
 		{
-			SelectedCount++;
-			SelectedTiles.Add(Tile);
-			if (SelectedCount >= 2) {
-				// check if the selected tiles are adjacent
-				// if they are, swap them
-				// if they are not, deselect all tiles
-				int32 X1, Y1, X2, Y2;
-				SelectedTiles[0]->GetTileIndex(X1, Y1);
-				SelectedTiles[1]->GetTileIndex(X2, Y2);
-				if (FMath::Abs(X1 - X2) + FMath::Abs(Y1 - Y2) == 1)
-				{
-					// Swap the tiles
-					ETileType TempType = SelectedTiles[0]->GetTileType();
-					SelectedTiles[0]->SetTileType(SelectedTiles[1]->GetTileType());
-					SelectedTiles[1]->SetTileType(TempType);
-					if (!CheckAndDeleteTiles())
-					{
-						// Swap back if no match
-						TempType = SelectedTiles[0]->GetTileType();
-						SelectedTiles[0]->SetTileType(SelectedTiles[1]->GetTileType());
-						SelectedTiles[1]->SetTileType(TempType);
-					}
-					else {
-						MoveTileDown();
-						while(CheckAndDeleteTiles()) {
-							UE_LOG(LogTemp, Warning, TEXT("CheckAndDeleteTiles"));
-							MoveTileDown();
-						}
-
-					}
-				}
-				// Deselect all tiles
-				for (ATile* T : SelectedTiles)
-				{
-					T->SetSelected(false);
+			SwapTiles(SelectedTiles[0], SelectedTiles[1]);
+			if (!IsTileMatcing())
+			{
+				SwapTiles(SelectedTiles[0], SelectedTiles[1]);
+			}
+			else {
+				while (IsTileMatcing()) {
+					DestroyTiles();
+					MoveTileDown();
 				}
 			}
+			ClearSelectedTiles();
+		}
+		else {
+			RemoveSelectedTile(SelectedTiles[0]);
 		}
 	}
 }
 
-bool ATileGrid::CheckAndDeleteTiles()
+bool ATileGrid::IsTileMatcing()
 {
-	TArray<ATile*> DeleteTiles;
+	if (TilesToDestroy.Num() > 0) {
+		TilesToDestroy.Empty();
+	}
 	for (int32 i = 0; i < SideLength; i++) {
 		for (int32 j = 0; j < SideLength; j++) {
 			if (TileGrid[i * SideLength + j]->GetTileType() == ETileType::TT_None) {
@@ -141,7 +122,7 @@ bool ATileGrid::CheckAndDeleteTiles()
 			}
 			if (RowSameTypeTiles.Num() >= 3) {
 				for (ATile* Tile : RowSameTypeTiles) {
-					DeleteTiles.Add(Tile);
+					TilesToDestroy.Add(Tile);
 				}
 			}
 			// check same type tiles in column
@@ -157,23 +138,35 @@ bool ATileGrid::CheckAndDeleteTiles()
 			}
 			if (ColumnSameTypeTiles.Num() >= 3) {
 				for (ATile* Tile : ColumnSameTypeTiles) {
-					DeleteTiles.Add(Tile);
+					TilesToDestroy.Add(Tile);
 				}
 			}
 		}
 	}
-	
-	UE_LOG(LogTemp, Warning, TEXT("DeleteTiles.Num() = %d"), DeleteTiles.Num());
 
-	// Delete the tiles
-	for (ATile* Tile : DeleteTiles) {
-		Tile->SetTileType(ETileType::TT_None);
-	}
-
-	if (DeleteTiles.Num() > 0) {
+	if (TilesToDestroy.Num() > 0) {
 		return true;
 	}
 	return false;
+}
+
+void ATileGrid::DestroyTiles()
+{
+	//auto _GameInstance = Cast<UPuzzleGameInstance>(GetGameInstance());
+	if (TilesToDestroy.Num() <= 3) {
+		GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Red, TEXT("Score: 10"));
+		OnTileMatched.Broadcast(10);
+		//_GameInstance->AddScore(10);
+	} else {
+		GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Red, TEXT("Score: 20"));
+		//_GameInstance->AddScore(20);
+		OnTileMatched.Broadcast(20);
+	}
+	// Delete the tiles
+	for (ATile* Tile : TilesToDestroy) {
+		Tile->SetTileType(ETileType::TT_None);
+	}
+	TilesToDestroy.Empty();
 }
 
 void ATileGrid::MoveTileDown()
@@ -193,9 +186,6 @@ void ATileGrid::MoveTileDown()
 			}
 		}
 	}
-	// Wait 1 Second
-	// FTimerHandle TimerHandle;
-	// GetWorldTimerManager().SetTimer(TimerHandle, this, &ATileGrid::FillEmptyTiles, 1.0f, false);
 	FillEmptyTiles();
 }
 
@@ -205,8 +195,40 @@ void ATileGrid::FillEmptyTiles()
 	{
 		if (Tile->GetTileType() == ETileType::TT_None)
 		{
-			Tile->SetTileType(static_cast<ETileType>(FMath::RandRange(0, 3)));
+			Tile->SetTileType(static_cast<ETileType>(FMath::RandRange(0, 5)));
 		}
 	}
+}
+
+void ATileGrid::SwapTiles(ATile* TileA, ATile* TileB)
+{
+	ETileType TempType = TileA->GetTileType();
+	TileA->SetTileType(TileB->GetTileType());
+	TileB->SetTileType(TempType);
+}
+
+void ATileGrid::AddSelectedTile(ATile* Tile)
+{
+	Tile->SetSelected(true);
+	SelectedTiles.Add(Tile);
+}
+
+void ATileGrid::RemoveSelectedTile(ATile* Tile)
+{
+	Tile->SetSelected(false);
+	int32 findIdx = SelectedTiles.Find(Tile);
+	if (findIdx != INDEX_NONE)
+	{
+		SelectedTiles.RemoveAt(findIdx);
+	}
+}
+
+void ATileGrid::ClearSelectedTiles()
+{
+	for (ATile* Tile : SelectedTiles)
+	{
+		Tile->SetSelected(false);
+	}
+	SelectedTiles.Empty();
 }
 

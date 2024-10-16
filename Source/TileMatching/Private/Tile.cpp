@@ -5,7 +5,6 @@
 #include "Components/BoxComponent.h"
 #include "Components/StaticMeshComponent.h"
 
-
 // Sets default values
 ATile::ATile()
 {
@@ -93,10 +92,12 @@ void ATile::SetTileColor(FLinearColor NewColor)
 void ATile::SetSelected(bool bSelected)
 {
 	bIsSelected = bSelected;
-	if (bIsSelected)
+	if (bIsSelected) {
 		SelectionBoxComp->SetVisibility(true);
-	else
+	}
+	else {
 		SelectionBoxComp->SetVisibility(false);
+	}
 }
 
 void ATile::SetTileIndex(int32 NewX, int32 NewY)

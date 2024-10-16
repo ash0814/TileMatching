@@ -6,6 +6,8 @@
 #include "Engine/GameInstance.h"
 #include "PuzzleGameInstance.generated.h"
 
+//DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnScoreUpdated, int32, PlayerScore);
+//DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnMovesUpdated, int32, RemainingMoves);
 /**
  * 
  */
@@ -18,6 +20,12 @@ private:
 	UPuzzleGameInstance();
 
 public:
+	//UPROPERTY(BlueprintAssignable, Category = "Game State")
+	//FOnScoreUpdated OnScoreChange;
+
+	//UPROPERTY(BlueprintAssignable, Category = "Game State")
+	//FOnMovesUpdated OnMovesChange;
+
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Game State")
 	int32 PlayerScore;
 

@@ -13,10 +13,10 @@ enum class ETileType : uint8
 	TT_Green UMETA(DisplayName = "Green"),
 	TT_Blue UMETA(DisplayName = "Blue"),
 	TT_Yellow UMETA(DisplayName = "Yellow"),
-	TT_Purple UMETA(DisplayName = "Purple"),
-	TT_Orange UMETA(DisplayName = "Orange"),
 	TT_Cyan UMETA(DisplayName = "Cyan"),
 	TT_Magenta UMETA(DisplayName = "Magenta"),
+	TT_Purple UMETA(DisplayName = "Purple"),
+	TT_Orange UMETA(DisplayName = "Orange"),
 	TT_None UMETA(DisplayName = "None")
 };
 

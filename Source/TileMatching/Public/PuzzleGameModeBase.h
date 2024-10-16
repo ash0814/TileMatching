@@ -31,4 +31,10 @@ public:
 	UFUNCTION(BlueprintCallable, Category = "Game Function")
 	ATileGrid* GetCurrentTileGrid();
 	void OnClickTile(ATile* Tile);
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Widget")
+	TSubclassOf<class UPlayerWidget> PlayerWidgetClass;
+
+	UPROPERTY()
+	class UPlayerWidget* PlayerWidget;
 };

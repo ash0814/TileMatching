@@ -5,6 +5,7 @@
 #include "PuzzlePlayerController.h"
 #include "Tile.h"
 #include "TileGrid.h"
+#include "PlayerWidget.h"
 
 APuzzleGameModeBase::APuzzleGameModeBase()
 {
@@ -15,11 +16,21 @@ APuzzleGameModeBase::APuzzleGameModeBase()
 void APuzzleGameModeBase::BeginPlay()
 {
 	Super::BeginPlay();
+
+    if (PlayerWidgetClass) {
+		PlayerWidget = CreateWidget<UPlayerWidget>(GetWorld(), PlayerWidgetClass);
+		if (PlayerWidget) {
+			PlayerWidget->AddToViewport();
+		}
+	}
 }
 
 void APuzzleGameModeBase::SetCurrentTileGrid(ATileGrid* TileGrid)
 {
 	CurrentTileGrid = TileGrid;
+	if (PlayerWidget) {
+		PlayerWidget->BindToScore(TileGrid);
+	}
 }
 
 ATileGrid* APuzzleGameModeBase::GetCurrentTileGrid()
@@ -30,14 +41,11 @@ ATileGrid* APuzzleGameModeBase::GetCurrentTileGrid()
 
 void APuzzleGameModeBase::OnClickTile(ATile* Tile)
 {
-    int32 X, Y;
-    Tile->GetTileIndex(X, Y);
-    GEngine->AddOnScreenDebugMessage(-1, 5.0f, FColor::Yellow, FString::Printf(TEXT("Tile Index: (%d, %d)"), X, Y));
     if (Tile->GetIsSelected()) {
-        Tile->SetSelected(false);
+        CurrentTileGrid->RemoveSelectedTile(Tile);
     }
     else {
-        Tile->SetSelected(true);
+        CurrentTileGrid->AddSelectedTile(Tile);
     }
     CurrentTileGrid->CheckSelection();
 }
