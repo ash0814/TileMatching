@@ -28,9 +28,6 @@ void APuzzleGameModeBase::BeginPlay()
 void APuzzleGameModeBase::SetCurrentTileGrid(ATileGrid* TileGrid)
 {
 	CurrentTileGrid = TileGrid;
-	if (PlayerWidget) {
-		PlayerWidget->BindToScore(TileGrid);
-	}
 }
 
 ATileGrid* APuzzleGameModeBase::GetCurrentTileGrid()

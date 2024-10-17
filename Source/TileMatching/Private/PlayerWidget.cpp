@@ -10,7 +10,6 @@
 
 void UPlayerWidget::BindToScore(ATileGrid* Grid)
 {
-	Grid->OnTileMatched.AddDynamic(this, &UPlayerWidget::UpdateScore);
 }
 
 void UPlayerWidget::UpdateScore(int32 NewScore)

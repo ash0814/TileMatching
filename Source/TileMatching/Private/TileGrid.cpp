@@ -152,15 +152,10 @@ bool ATileGrid::IsTileMatcing()
 
 void ATileGrid::DestroyTiles()
 {
-	//auto _GameInstance = Cast<UPuzzleGameInstance>(GetGameInstance());
 	if (TilesToDestroy.Num() <= 3) {
 		GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Red, TEXT("Score: 10"));
-		OnTileMatched.Broadcast(10);
-		//_GameInstance->AddScore(10);
 	} else {
 		GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Red, TEXT("Score: 20"));
-		//_GameInstance->AddScore(20);
-		OnTileMatched.Broadcast(20);
 	}
 	// Delete the tiles
 	for (ATile* Tile : TilesToDestroy) {

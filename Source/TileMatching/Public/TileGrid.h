@@ -6,8 +6,6 @@
 #include "GameFramework/Actor.h"
 #include "TileGrid.generated.h"
 
-DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnTileMatched, int32, Score);
-
 UCLASS()
 class TILEMATCHING_API ATileGrid : public AActor
 {
@@ -32,9 +30,6 @@ private:
 public:	
 	// Called every frame
 	virtual void Tick(float DeltaTime) override;
-
-	UPROPERTY(BlueprintAssignable, Category = "Tile Grid")
-	FOnTileMatched OnTileMatched;
 
 	// Number of tiles in the grid
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Tile Grid")
