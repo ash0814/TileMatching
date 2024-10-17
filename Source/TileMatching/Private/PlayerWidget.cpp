@@ -8,15 +8,28 @@
 #include "PuzzleGameInstance.h"
 #include "TileGrid.h"
 
-void UPlayerWidget::BindToScore(ATileGrid* Grid)
+void UPlayerWidget::OnNotifyScore_Implementation(int32 Score)
 {
+	UpdateScore(Score);
+}
+
+void UPlayerWidget::OnNotifyMoves_Implementation(int32 Moves)
+{
+	UpdateMoves(Moves);
+}
+
+
+
+void UPlayerWidget::OnNotifyMyGameOver_Implementation(const FText& msg)
+{
+	UpdateGameOver(msg);
 }
 
 void UPlayerWidget::UpdateScore(int32 NewScore)
 {
-	if (Score)
+	if (ScoreText)
 	{
-		Score->SetText(FText::FromString(FString::FromInt(NewScore)));
+		ScoreText->SetText(FText::FromString(FString::FromInt(NewScore)));
 	}
 }
 
@@ -27,3 +40,20 @@ void UPlayerWidget::UpdateMoves(int32 Moves)
 		LeftMove->SetText(FText::FromString(FString::FromInt(Moves)));
 	}
 }
+
+void UPlayerWidget::UpdateGameOver(FText GameOverMessage)
+{
+	if (GameOverText)
+	{
+		GameOverText->SetVisibility(ESlateVisibility::Visible);
+		GameOverText->SetText(GameOverMessage);
+
+		GetOwningPlayer()->bShowMouseCursor = true;
+		GetOwningPlayer()->SetInputMode(FInputModeUIOnly());
+		if (UndoButton)
+		{
+			UndoButton->SetVisibility(ESlateVisibility::Hidden);
+		}
+	}
+}
+

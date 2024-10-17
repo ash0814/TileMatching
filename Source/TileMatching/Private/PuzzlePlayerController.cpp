@@ -67,17 +67,6 @@ void APuzzlePlayerController::OnLeftClick(const FInputActionValue& Value)
         AActor* HitActor = HitResult.GetActor(); 
         if (ATile* HitTile = Cast<ATile>(HitActor))
 		{
-            /*
-            int32 X, Y;
-            HitTile->GetTileIndex(X, Y);
-            GEngine->AddOnScreenDebugMessage(-1, 5.0f, FColor::Yellow, FString::Printf(TEXT("Tile Index: (%d, %d)"), X, Y));
-            if (HitTile->GetIsSelected()) {
-                HitTile->SetSelected(false);
-            }
-            else {
-                HitTile->SetSelected(true);
-            }
-            */
             auto _GameMode = Cast<APuzzleGameModeBase>(GetWorld()->GetAuthGameMode());
             if (_GameMode) {
 				_GameMode->OnClickTile(HitTile);

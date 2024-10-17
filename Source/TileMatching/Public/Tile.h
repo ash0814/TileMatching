@@ -90,5 +90,7 @@ public:
 	void SetTileGrid(ATileGrid* NewTileGrid) { TileGrid = NewTileGrid; }
 
 public:
+	UFUNCTION(BlueprintCallable, Category = "Tile")
+	void MoveTo(FVector NewLocation, int32 NexX, int32 NewY);
 
 };

@@ -106,6 +106,13 @@ void ATile::SetTileIndex(int32 NewX, int32 NewY)
 	TileIndexY = NewY;
 }
 
+void ATile::MoveTo(FVector NewLocation, int32 NexX, int32 NewY)
+{
+	SetActorLocation(NewLocation);
+	SetTileIndex(NexX, NewY);
+}
+
+
 void ATile::GetTileIndex(int32& OutX, int32& OutY) const
 {
 	OutX = TileIndexX;

@@ -4,6 +4,7 @@
 
 #include "CoreMinimal.h"
 #include "GameFramework/GameModeBase.h"
+#include "Observer.h"
 #include "PuzzleGameModeBase.generated.h"
 
 class ATile;

@@ -4,6 +4,7 @@
 
 #include "CoreMinimal.h"
 #include "Engine/GameInstance.h"
+#include "Observer.h"
 #include "PuzzleGameInstance.generated.h"
 
 //DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnScoreUpdated, int32, PlayerScore);
@@ -19,13 +20,11 @@ class TILEMATCHING_API UPuzzleGameInstance : public UGameInstance
 private:
 	UPuzzleGameInstance();
 
+	TArray<TScriptInterface<class IObserver>> ScoreObservers;
+	TArray<TScriptInterface<class IObserver>> MoveObservers;
+	TArray<TScriptInterface<class IObserver>> MyGameOverObservers;
+
 public:
-	//UPROPERTY(BlueprintAssignable, Category = "Game State")
-	//FOnScoreUpdated OnScoreChange;
-
-	//UPROPERTY(BlueprintAssignable, Category = "Game State")
-	//FOnMovesUpdated OnMovesChange;
-
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Game State")
 	int32 PlayerScore;
 
@@ -40,4 +39,20 @@ public:
 
 	UFUNCTION(BlueprintCallable, Category = "Game Function")
 	void ResetGameState();
+
+	void RegisterScoreObserver(TScriptInterface<class IObserver> Observer);
+	void UnregisterScoreObserver(TScriptInterface<class IObserver> Observer);
+	void NotifyScoreObservers();
+
+	void RegisterMoveObserver(TScriptInterface<class IObserver> Observer);
+	void UnregisterMoveObserver(TScriptInterface<class IObserver> Observer);
+	void NotifyMoveObservers();
+
+	void RegisterMyGameOverObserver(TScriptInterface<class IObserver> Observer);
+	void UnregisterMyGameOverObserver(TScriptInterface<class IObserver> Observer);
+	void NotifyMyGameOverObservers();
+	FText GameOverMessage;
+
+	UFUNCTION(BlueprintCallable, Category = "Game Function")
+	void SetGameOverMessage(FText Message);
 };
