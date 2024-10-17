@@ -4,7 +4,6 @@
 
 #include "CoreMinimal.h"
 #include "GameFramework/Actor.h"
-#include "Components/TimelineComponent.h"
 #include "TileGrid.generated.h"
 
 UCLASS()
@@ -26,6 +25,7 @@ private:
 
 	TArray<class ATile*> TileGrid;
 
+	//TArray<class ATile*> TilesToDestroy;
 
 public:	
 	// Called every frame
@@ -40,9 +40,6 @@ public:
 
 	UFUNCTION(BlueprintCallable, Category = "Tile Grid")
 	void GenerateGrid();
-
-	UFUNCTION(BlueprintCallable, Category = "Tile Grid")
-	ATile* GetTileByIndex(int32 IndexX, int32 IndexY);
 
 	UFUNCTION(BlueprintCallable, Category = "Tile Grid")
 	void CheckSelection();
@@ -61,7 +58,7 @@ public:
 	void FillEmptyTiles();
 
 	UFUNCTION(BlueprintCallable, Category = "Tile Grid")
-	void SwapTileByType(ATile* TileA, ATile* TileB);
+	void SwapTiles(ATile* TileA, ATile* TileB);
 
 	UFUNCTION(BlueprintCallable, Category = "Tile Grid")
 	void AddSelectedTile(ATile* Tile);
@@ -74,7 +71,4 @@ public:
 
 	UFUNCTION(BlueprintCallable, Category = "Tile Grid")
 	bool IsAnyTileCanMove();
-
-	UFUNCTION(BlueprintCallable, Category = "Tile Grid")
-	void SwapTileMove(ATile* &TileA, ATile* &TileB);
 };
