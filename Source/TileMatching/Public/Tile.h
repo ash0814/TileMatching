@@ -93,4 +93,6 @@ public:
 	UFUNCTION(BlueprintCallable, Category = "Tile")
 	void MoveTo(FVector NewLocation, int32 NexX, int32 NewY);
 
+	UFUNCTION(BlueprintCallable, Category = "Tile")
+	void Die();
 };

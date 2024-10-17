@@ -72,6 +72,20 @@ void ATileGrid::GenerateGrid()
 	}
 }
 
+ATile* ATileGrid::GetTileByIndex(int32 IndexX, int32 IndexY)
+{
+	if (IndexX >= 0 && IndexX < SideLength && IndexY >= 0 && IndexY < SideLength)
+	{
+		for (auto T : TileGrid) {
+			int32 X, Y;
+			T->GetTileIndex(X, Y);
+			if (X == IndexX && Y == IndexY)
+				return T;
+		}
+	}
+	return nullptr;
+}
+
 void ATileGrid::CheckSelection()
 {
 	if (SelectedTiles.Num() >= 2) {
@@ -82,9 +96,10 @@ void ATileGrid::CheckSelection()
 		{
 			auto _GameInstance = Cast<UPuzzleGameInstance>(GetGameInstance());
 			_GameInstance->DecreaseMoves();
-			SwapTiles(SelectedTiles[0], SelectedTiles[1]);
+			SwapTileMove(SelectedTiles[0], SelectedTiles[1]);
 			if (!IsTileMatching(SelectedTiles[0]) && !IsTileMatching(SelectedTiles[1])) {
-				SwapTiles(SelectedTiles[0], SelectedTiles[1]);
+				// print selected tiles index
+				SwapTileMove(SelectedTiles[0], SelectedTiles[1]);
 			}
 			else {
 				while (IsTileMatching()) {
@@ -104,15 +119,15 @@ bool ATileGrid::IsTileMatching()
 	TArray<ATile*> TilesToDestroy;
 	for (int32 i = 0; i < SideLength; i++) {
 		for (int32 j = 0; j < SideLength; j++) {
-			if (TileGrid[i * SideLength + j]->GetTileType() == ETileType::TT_None) {
+			if (!GetTileByIndex(i, j) || GetTileByIndex(i, j)->GetTileType() == ETileType::TT_None) {
 				continue;
 			}
 			// check same type tiles in row
 			TArray<ATile*> RowSameTypeTiles;
-			RowSameTypeTiles.Add(TileGrid[i * SideLength + j]);
+			RowSameTypeTiles.Add(GetTileByIndex(i, j));
 			for (int32 k = j + 1; k < SideLength; k++) {
-				if (TileGrid[i * SideLength + j]->GetTileType() == TileGrid[i * SideLength + k]->GetTileType()) {
-					RowSameTypeTiles.Add(TileGrid[i * SideLength + k]);
+				if (GetTileByIndex(i, k) && GetTileByIndex(i, j)->GetTileType() == GetTileByIndex(i, k)->GetTileType()) {
+					RowSameTypeTiles.Add(GetTileByIndex(i, k));
 				}
 				else {
 					break;
@@ -125,10 +140,10 @@ bool ATileGrid::IsTileMatching()
 			}
 			// check same type tiles in column
 			TArray<ATile*> ColumnSameTypeTiles;
-			ColumnSameTypeTiles.Add(TileGrid[i * SideLength + j]);
+			ColumnSameTypeTiles.Add(GetTileByIndex(i, j));
 			for (int32 k = i + 1; k < SideLength; k++) {
-				if (TileGrid[i * SideLength + j]->GetTileType() == TileGrid[k * SideLength + j]->GetTileType()) {
-					ColumnSameTypeTiles.Add(TileGrid[k * SideLength + j]);
+				if (GetTileByIndex(k, j) && GetTileByIndex(i, j)->GetTileType() == GetTileByIndex(k, j)->GetTileType()) {
+					ColumnSameTypeTiles.Add(GetTileByIndex(k, j));
 				}
 				else {
 					break;
@@ -141,7 +156,7 @@ bool ATileGrid::IsTileMatching()
 			}
 		}
 	}
-
+	UE_LOG(LogTemp, Warning, TEXT("TilesToDestroy.Num() : %d"), TilesToDestroy.Num());
 	if (TilesToDestroy.Num() > 0) {
 		DestroyTiles(TilesToDestroy);
 		return true;
@@ -156,22 +171,22 @@ bool ATileGrid::IsTileMatching(ATile* Tile)
 	ETileType TileType = Tile->GetTileType();
 	int32 Count = 1;
 	for (int32 i = X + 1; i < SideLength; i++) {
-		if (TileGrid[i * SideLength + Y]->GetTileType() == TileType) Count++;
+		if (GetTileByIndex(i, Y) && GetTileByIndex(i, Y)->GetTileType() == TileType) Count++;
 		else break;
 	}
 	for (int32 i = X - 1; i >= 0; i--) {
-		if (TileGrid[i * SideLength + Y]->GetTileType() == TileType) Count++;
+		if (GetTileByIndex(i, Y) && GetTileByIndex(i, Y)->GetTileType() == TileType) Count++;
 		else break;
 	}
 	if (Count >= 3)
 		return true;
 	Count = 1;
 	for (int32 j = Y + 1; j < SideLength; j++) {
-		if (TileGrid[X * SideLength + j]->GetTileType() == TileType) Count++;
+		if (GetTileByIndex(X, j) && GetTileByIndex(X, j)->GetTileType() == TileType) Count++;
 		else break;
 	}
 	for (int32 j = Y - 1; j >= 0; j--) {
-		if (TileGrid[X * SideLength + j]->GetTileType() == TileType) Count++;
+		if (GetTileByIndex(X, j) && GetTileByIndex(X, j)->GetTileType() == TileType) Count++;
 		else break;
 	}
 	if (Count >= 3)
@@ -189,7 +204,8 @@ void ATileGrid::DestroyTiles(TArray<class ATile*> TilesToDestroy)
 	}
 	// Delete the tiles
 	for (ATile* Tile : TilesToDestroy) {
-		Tile->SetTileType(ETileType::TT_None);
+		//Tile->SetTileType(ETileType::TT_None);
+		Tile->Die();
 	}
 }
 
@@ -199,12 +215,21 @@ void ATileGrid::MoveTileDown()
 	for (int32 i = SideLength - 1; i >= 0; i--) {
 		for (int32 j = 0; j < SideLength; j++) {
 			// get closest non-empty tile
-			if (TileGrid[i * SideLength + j]->GetTileType() == ETileType::TT_None) {
+			if (!GetTileByIndex(i, j)) {
 				for (int32 k = i - 1; k >= 0; k--) {
-					if (TileGrid[k * SideLength + j]->GetTileType() != ETileType::TT_None) {
-						TileGrid[i * SideLength + j]->SetTileType(TileGrid[k * SideLength + j]->GetTileType());
-						TileGrid[k * SideLength + j]->SetTileType(ETileType::TT_None);
+					if (GetTileByIndex(k, j)) {
+						FVector GridCenter = GetActorLocation();
+						GridCenter.X -= (SideLength * TileSpacing) / 2;
+						GridCenter.Y -= (SideLength * TileSpacing) / 2;
+						FVector TileLocation = GridCenter;
+						TileLocation.X += i * TileSpacing;
+						TileLocation.Y += j * TileSpacing;
+						// move the tile down
+						GetTileByIndex(k, j)->MoveTo(TileLocation, i, j);
 						break;
+					}
+					else {
+						continue;
 					}
 				}
 			}
@@ -215,16 +240,33 @@ void ATileGrid::MoveTileDown()
 
 void ATileGrid::FillEmptyTiles()
 {
-	for (ATile* Tile : TileGrid)
+	for (int32 i = 0; i < SideLength; i++)
 	{
-		if (Tile->GetTileType() == ETileType::TT_None)
+		for (int32 j = 0; j < SideLength; j++)
 		{
-			Tile->SetTileType(static_cast<ETileType>(FMath::RandRange(0, 5)));
+			if (GetTileByIndex(i, j)) {
+				continue;
+			}
+			else {
+				FVector GridCenter = GetActorLocation();
+				GridCenter.X -= (SideLength * TileSpacing) / 2;
+				GridCenter.Y -= (SideLength * TileSpacing) / 2;
+				FVector TileLocation = GridCenter;
+				TileLocation.X += i * TileSpacing;
+				TileLocation.Y += j * TileSpacing;
+				if (TileClass) {
+					ATile* NewTile = GetWorld()->SpawnActor<ATile>(TileClass, TileLocation, FRotator::ZeroRotator);
+					NewTile->SetTileType(static_cast<ETileType>(FMath::RandRange(0, 5)));
+					NewTile->SetTileIndex(i, j);
+					NewTile->SetTileGrid(this);
+					TileGrid.Add(NewTile);
+				}
+			}
 		}
 	}
 }
 
-void ATileGrid::SwapTiles(ATile* TileA, ATile* TileB)
+void ATileGrid::SwapTileByType(ATile* TileA, ATile* TileB)
 {
 	ETileType TempType = TileA->GetTileType();
 	TileA->SetTileType(TileB->GetTileType());
@@ -260,31 +302,47 @@ bool ATileGrid::IsAnyTileCanMove()
 {
 	for (int32 i = 0; i < SideLength; i++) {
 		for (int32 j = 0; j < SideLength; j++) {
-			ATile * Tile = TileGrid[i * SideLength + j];
+			ATile * Tile = GetTileByIndex(i, j);
 			ATile * RightTile = nullptr;
 			ATile * DownTile = nullptr;
-			if (i < SideLength - 1) {
-				DownTile = TileGrid[(i + 1) * SideLength + j];
-				SwapTiles(Tile, DownTile);
-				if (IsTileMatching(Tile) || IsTileMatching(DownTile)) {
-					SwapTiles(Tile, DownTile);
-					UE_LOG(LogTemp, Warning, TEXT("Down Tile : %d, %d"), i, j);
-					return true;
+			if (Tile) {
+				if (i < SideLength - 1) {
+					DownTile = GetTileByIndex(i + 1, j);
+					if (DownTile) {
+						SwapTileByType(Tile, DownTile);
+						if (IsTileMatching(Tile) || IsTileMatching(DownTile)) {
+							SwapTileByType(Tile, DownTile);
+							return true;
+						}
+						SwapTileByType(Tile, DownTile);
+					}
 				}
-				SwapTiles(Tile, DownTile);
-			}
-			if (j < SideLength - 1) {
-				RightTile = TileGrid[i * SideLength + j + 1];
-				SwapTiles(Tile, RightTile);
-				if (IsTileMatching(Tile) || IsTileMatching(RightTile)) {
-					UE_LOG(LogTemp, Warning, TEXT("Right Tile : %d, %d"), i, j);
-					SwapTiles(Tile, RightTile);
-					return true;
+				if (j < SideLength - 1) {
+					RightTile = GetTileByIndex(i, j + 1);
+					if (RightTile) {
+						SwapTileByType(Tile, RightTile);
+						if (IsTileMatching(Tile) || IsTileMatching(RightTile)) {
+							SwapTileByType(Tile, RightTile);
+							return true;
+						}
+						SwapTileByType(Tile, RightTile);
+					}
 				}
-				SwapTiles(Tile, RightTile);
 			}
 		}
 	}
 	return false;
+}
+
+void ATileGrid::SwapTileMove(ATile* &TileA, ATile* &TileB)
+{
+	int32 AX, AY, BX, BY;
+	FVector ALocation = TileA->GetActorLocation();
+	FVector BLocation = TileB->GetActorLocation();
+	TileA->GetTileIndex(AX, AY);
+	TileB->GetTileIndex(BX, BY);
+	
+	TileA->MoveTo(BLocation, BX, BY);
+	TileB->MoveTo(ALocation, AX, AY);
 }
 

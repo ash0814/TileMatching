@@ -112,6 +112,13 @@ void ATile::MoveTo(FVector NewLocation, int32 NexX, int32 NewY)
 	SetTileIndex(NexX, NewY);
 }
 
+void ATile::Die()
+{
+	FVector NewLocation = FVector(1000, 0, 0);
+	MoveTo(NewLocation, -1, -1);
+	Destroy();
+}
+
 
 void ATile::GetTileIndex(int32& OutX, int32& OutY) const
 {
@@ -123,4 +130,5 @@ void ATile::SetOutlineColor(FLinearColor NewColor)
 {
 	SelectionBoxComp->ShapeColor = NewColor.ToFColor(true);
 }
+
 
