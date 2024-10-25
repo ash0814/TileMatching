@@ -5,6 +5,8 @@
 #include "Tile.h"
 #include "PuzzleGameModeBase.h"
 #include "PuzzleGameInstance.h"
+#include "TileCommandInvoker.h"
+#include "SwapTileCommand.h"
 #include <queue>
 #include <vector>
 #include <algorithm>
@@ -25,6 +27,8 @@ void ATileGrid::BeginPlay()
 	Super::BeginPlay();
 	
 	GenerateGrid();
+
+	
 	auto _GameMode = Cast<APuzzleGameModeBase>(GetWorld()->GetAuthGameMode());
 	if (_GameMode)
 	{
@@ -66,6 +70,35 @@ void ATileGrid::GenerateGrid()
 			}
 		}
 	}
+	
+	// Tile Generation with Async Task
+	/*
+	for (int32 i = 0; i < SideLength; i++) {
+		for (int32 j = 0; j < SideLength; j++) {
+			AsyncTask(ENamedThreads::AnyBackgroundThreadNormalTask, [this, i, j]() {
+				ETileType NewTileType = static_cast<ETileType>(FMath::RandRange(0, 5));
+
+				AsyncTask(ENamedThreads::GameThread, [this, i, j, NewTileType]() {
+					FVector GridCenter = GetActorLocation();
+					GridCenter.X -= (SideLength * TileSpacing) / 2;
+					GridCenter.Y -= (SideLength * TileSpacing) / 2;
+
+					FVector TileLocation = GridCenter;
+					TileLocation.X += i * TileSpacing;
+					TileLocation.Y += j * TileSpacing;
+
+					if (TileClass) {
+						ATile* NewTile = GetWorld()->SpawnActor<ATile>(TileClass, TileLocation, FRotator::ZeroRotator);
+						NewTile->SetTileType(NewTileType);
+						NewTile->SetTileIndex(i, j);
+						NewTile->SetTileGrid(this);
+						TileGrid.Add(NewTile);
+					}
+				});
+			});
+		}
+	}
+	*/
 	while (IsTileMatching())
 	{
 		MoveTileDown();
@@ -86,20 +119,38 @@ ATile* ATileGrid::GetTileByIndex(int32 IndexX, int32 IndexY)
 	return nullptr;
 }
 
+bool ATileGrid::IsSelectedTilesNeighbour()
+{
+	if (SelectedTiles.Num() < 2) {
+		return false;
+	}
+	int32 X1, Y1, X2, Y2;
+	SelectedTiles[0]->GetTileIndex(X1, Y1);
+	SelectedTiles[1]->GetTileIndex(X2, Y2);
+	if (FMath::Abs(X1 - X2) + FMath::Abs(Y1 - Y2) == 1) {
+		return true;
+	}
+	return false;
+}
+
 void ATileGrid::CheckSelection()
 {
 	if (SelectedTiles.Num() >= 2) {
-		int32 X1, Y1, X2, Y2;
-		SelectedTiles[0]->GetTileIndex(X1, Y1);
-		SelectedTiles[1]->GetTileIndex(X2, Y2);
-		if (FMath::Abs(X1 - X2) + FMath::Abs(Y1 - Y2) == 1)
+		if (IsSelectedTilesNeighbour())
 		{
 			auto _GameInstance = Cast<UPuzzleGameInstance>(GetGameInstance());
 			_GameInstance->DecreaseMoves();
-			SwapTileMove(SelectedTiles[0], SelectedTiles[1]);
+
+			USwapTileCommand * SwapTileCommand = NewObject<USwapTileCommand>();
+			SwapTileCommand->Initialize(SelectedTiles[0], SelectedTiles[1]);
+
+			ATileCommandInvoker * CommandInvoker = GetWorld()->SpawnActor<ATileCommandInvoker>();
+			CommandInvoker->ExecuteCommand(SwapTileCommand);
+
+			// SwapTileMove(SelectedTiles[0], SelectedTiles[1]);
 			if (!IsTileMatching(SelectedTiles[0]) && !IsTileMatching(SelectedTiles[1])) {
-				// print selected tiles index
-				SwapTileMove(SelectedTiles[0], SelectedTiles[1]);
+				// SwapTileMove(SelectedTiles[0], SelectedTiles[1]);
+				CommandInvoker->UndoCommand();
 			}
 			else {
 				while (IsTileMatching()) {
@@ -202,9 +253,7 @@ void ATileGrid::DestroyTiles(TArray<class ATile*> TilesToDestroy)
 	} else {
 		_GameInstance->AddScore(20);
 	}
-	// Delete the tiles
 	for (ATile* Tile : TilesToDestroy) {
-		//Tile->SetTileType(ETileType::TT_None);
 		Tile->Die();
 	}
 }
@@ -332,17 +381,5 @@ bool ATileGrid::IsAnyTileCanMove()
 		}
 	}
 	return false;
-}
-
-void ATileGrid::SwapTileMove(ATile* &TileA, ATile* &TileB)
-{
-	int32 AX, AY, BX, BY;
-	FVector ALocation = TileA->GetActorLocation();
-	FVector BLocation = TileB->GetActorLocation();
-	TileA->GetTileIndex(AX, AY);
-	TileB->GetTileIndex(BX, BY);
-	
-	TileA->MoveTo(BLocation, BX, BY);
-	TileB->MoveTo(ALocation, AX, AY);
 }
 

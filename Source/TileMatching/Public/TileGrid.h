@@ -45,7 +45,11 @@ public:
 	ATile* GetTileByIndex(int32 IndexX, int32 IndexY);
 
 	UFUNCTION(BlueprintCallable, Category = "Tile Grid")
+	bool IsSelectedTilesNeighbour();
+	
+	UFUNCTION(BlueprintCallable, Category = "Tile Grid")
 	void CheckSelection();
+
 
 	UFUNCTION(BlueprintCallable, Category = "Tile Grid")
 	bool IsTileMatching();
@@ -74,7 +78,4 @@ public:
 
 	UFUNCTION(BlueprintCallable, Category = "Tile Grid")
 	bool IsAnyTileCanMove();
-
-	UFUNCTION(BlueprintCallable, Category = "Tile Grid")
-	void SwapTileMove(ATile* &TileA, ATile* &TileB);
 };
