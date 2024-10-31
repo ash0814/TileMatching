@@ -24,6 +24,7 @@ private:
 
 	FVector TileAOriginalLocation;
 	FVector TileBOriginalLocation;
+
 	int32 TileAOriginalIndexX;
 	int32 TileAOriginalIndexY;
 	int32 TileBOriginalIndexX;

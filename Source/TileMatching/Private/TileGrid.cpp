@@ -70,7 +70,7 @@ void ATileGrid::GenerateGrid()
 			}
 		}
 	}
-	
+
 	// Tile Generation with Async Task
 	/*
 	for (int32 i = 0; i < SideLength; i++) {
@@ -99,6 +99,7 @@ void ATileGrid::GenerateGrid()
 		}
 	}
 	*/
+
 	while (IsTileMatching())
 	{
 		MoveTileDown();
